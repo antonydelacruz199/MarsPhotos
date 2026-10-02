@@ -1,12 +1,20 @@
 package com.example.marsphotos.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
@@ -17,9 +25,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.example.marsphotos.data.model.MarsPhoto
 import com.example.marsphotos.ui.theme.MarsPhotosTheme
 import com.example.marsphotos.viewmodel.MarsUiState
@@ -50,7 +61,10 @@ fun HomeScreen(
         ) {
             when (uiState) {
                 is MarsUiState.Loading -> LoadingScreen()
-                is MarsUiState.Success -> ResultScreen(photos = uiState.photos)
+                is MarsUiState.Success -> ResultScreen(
+                    photos = uiState.photos,
+                    modifier = Modifier.fillMaxSize()
+                )
                 is MarsUiState.Error -> ErrorScreen(
                     message = uiState.message,
                     onRetry = onRetry
@@ -82,23 +96,46 @@ fun ResultScreen(
     photos: List<MarsPhoto>,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "Conexión exitosa",
-            style = MaterialTheme.typography.headlineSmall,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+    Column(modifier = modifier.fillMaxSize()) {
         Text(
             text = "Se recuperaron ${photos.size} fotografías de Marte.",
-            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.Center
         )
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 120.dp),
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(
+                items = photos,
+                key = { photo -> photo.id }
+            ) { photo ->
+                MarsPhotoCard(photo = photo)
+            }
+        }
     }
+}
+
+@Composable
+fun MarsPhotoCard(
+    photo: MarsPhoto,
+    modifier: Modifier = Modifier
+) {
+    AsyncImage(
+        model = photo.imgSrc,
+        contentDescription = "Fotografía de Marte ${photo.id}",
+        contentScale = ContentScale.Crop,
+        modifier = modifier
+            .aspectRatio(1f)
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+    )
 }
 
 @Composable
